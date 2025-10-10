@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cardship</title>
+<style>
+/* Reset */
+* { margin:0; padding:0; box-sizing:border-box; }
+
+/* Body and animated background */
+body {
+  font-family: 'Arial', sans-serif;
+  overflow-x: hidden;
+  background: linear-gradient(-45deg, #ff9a9e, #fad0c4, #a1c4fd, #c2e9fb);
+  background-size: 400% 400%;
+  animation: bgAnimation 30s ease infinite;
+  color: #222;
+  min-height: 100vh;
+}
+
+/* Background animation keyframes */
+@keyframes bgAnimation {
+  0% { background-position: 0% 50%; }
+  25% { background-position: 50% 50%; }
+  50% { background-position: 100% 50%; }
+  75% { background-position: 50% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Floating shapes for depth */
+.shape {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.3;
+  animation: float 30s linear infinite;
+  z-index: 0;
+}
+.shape1 { width: 180px; height: 180px; background: #ff9a9e; top: 50px; left: 10%; }
+.shape2 { width: 160px; height: 160px; background: #fad0c4; top: 300px; left: 70%; }
+.shape3 { width: 220px; height: 220px; background: #a1c4fd; top: 600px; left: 30%; }
+
+@keyframes float {
+  0% { transform: translateY(0) rotate(0deg);}
+  50% { transform: translateY(-150px) rotate(180deg);}
+  100% { transform: translateY(0) rotate(360deg);}
+}
+
+/* Header */
+header {
+  position: sticky;
+  top:0;
+  z-index: 10;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:15px 30px;
+  background: rgba(255,255,255,0.9);
+  backdrop-filter: blur(6px);
+  box-shadow:0 4px 10px rgba(0,0,0,0.1);
+}
+header .brand { display:flex; align-items:center; gap:10px; }
+header .brand img { width:80px; height:auto; border-radius:0; }
+header nav a { margin-left:15px; text-decoration:none; color:#0B3D91; font-weight:bold; cursor:pointer; }
+header nav a.active { border-bottom:3px solid #D7263D; }
+header nav a:hover { color:#D7263D; }
+
+/* Main content */
+main { max-width: 1000px; margin:auto; padding:30px 20px; position:relative; z-index:1; }
+
+/* Cards and sections */
+.card, .composer, .auth-box {
+  background: rgba(255,255,255,0.95);
+  padding:20px;
+  border-radius:16px;
+  margin-bottom:25px;
+  box-shadow:0 6px 20px rgba(0,0,0,0.08);
+  transition:0.3s;
+  word-wrap: break-word;
+}
+.card:hover { box-shadow:0 12px 25px rgba(0,0,0,0.15);}
+textarea, input {
+  width:100%;
+  padding:12px;
+  margin:8px 0;
+  border-radius:12px;
+  border:1px solid #ccc;
+  resize:vertical;
+}
+.btn {
+  background:#D7263D;
+  color:white;
+  padding:12px 18px;
+  border:none;
+  border-radius:12px;
+  cursor:pointer;
+  font-weight:bold;
+  transition:0.3s;
+}
+.btn:hover { background:#A61C2D; }
+
+/* Section links */
+.home-links a {
+  display:inline-block;
+  margin:5px 10px 20px 0;
+  padding:10px 16px;
+  background:#0B3D91;
+  color:white;
+  text-decoration:none;
+  border-radius:8px;
+  font-weight:bold;
+  transition:0.3s;
+}
+.home-links a:hover { background:#05509E; }
+
+/* Sections hidden by default */
+section { display:none; }
+section.active { display:block; }
+</style>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script>
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+</script>
+</head>
+<body>
+
+<!-- Floating shapes -->
+<div class="shape shape1"></div>
+<div class="shape shape2"></div>
+<div class="shape shape3"></div>
+
+<header>
+  <div class="brand">
+    <img src="Cardship-logo.png" alt="Cardship Logo">
+    <div>
+      <div style="font-size:22px;font-weight:bold;color:#0B3D91;">Cardship</div>
+      <div style="font-size:12px;color:#555;">Connect, Collect & Share</div>
+    </div>
+  </div>
+  <nav>
+    <a onclick="showPage('home')" class="active">Home</a>
+    <a onclick="showPage('drops')">Drops</a>
+    <a onclick="showPage('marketplace')">Marketplace</a>
+    <a onclick="showPage('shop')">Shop</a>
+    <a onclick="showPage('profile')">Profile</a>
+    <a onclick="showPage('login')">Login</a>
+    <a onclick="showPage('register')">Register</a>
+  </nav>
+</header>
+
+<main>
+
+<!-- Home -->
+<section id="home" class="active">
+  <div class="card" style="text-align:center;">
+    <h1 style="color:#0B3D91;">Welcome to Cardship!</h1>
+    <p style="font-size:16px; color:#555;">Connect with collectors, share your finds, and explore the latest card drops.</p>
+  </div>
+
+  <div class="composer card">
+    <h2>Share Something</h2>
+    <textarea placeholder="What's on your mind?"></textarea>
+    <button class="btn">Post</button>
+  </div>
+
+  <div class="home-links">
+    <a onclick="showPage('drops')">Check Latest Drops</a>
+    <a onclick="showPage('marketplace')">Go to Marketplace</a>
+    <a onclick="showPage('shop')">Visit Shop</a>
+    <a onclick="showPage('profile')">Your Profile</a>
+  </div>
+
+  <div class="card" style="overflow-x:auto; white-space:nowrap;">
+    <h2>Latest News & Drops</h2>
+    <div style="display:inline-block; width:250px; margin-right:10px; background:#f0f8ff; border-radius:12px; padding:10px;">
+      <h3>Vintage 1995 Classics</h3>
+      <p>Release: Oct 10, 2025</p>
+    </div>
+    <div style="display:inline-block; width:250px; margin-right:10px; background:#ffe4e1; border-radius:12px; padding:10px;">
+      <h3>Limited Foil Pack</h3>
+      <p>Release: Nov 5, 2025</p>
+    </div>
+    <div style="display:inline-block; width:250px; margin-right:10px; background:#e0ffff; border-radius:12px; padding:10px;">
+      <h3>Exclusive Promo Cards</h3>
+      <p>Release: Dec 1, 2025</p>
+    </div>
+  </div>
+
+  <div class="card" style="background:#fff8dc;">
+    <h3>Announcement</h3>
+    <p>Join our upcoming online meetup for collectors! Learn tips for preserving rare cards and meet fellow enthusiasts.</p>
+  </div>
+</section>
+
+<!-- Drops -->
+<section id="drops">
+  <h2>Upcoming & Recent Drops</h2>
+  <div class="card"><h3>Vintage 1995 Classics Reprint</h3><p>Release Date: Oct 10, 2025</p></div>
+  <div class="card"><h3>Limited Edition Foil Pack</h3><p>Release Date: Nov 5, 2025</p></div>
+</section>
+
+<!-- Marketplace -->
+<section id="marketplace">
+  <h2>Marketplace</h2>
+  <div class="card"><strong>Seller:</strong> John D. <p>Rookie All-Star PSA 9 - $150</p></div>
+  <div class="card"><strong>Seller:</strong> Mia S. <p>Holographic Dragon Card - $200</p></div>
+</section>
+
+  <!-- SHOP SECTION -->
+<section id="shop">
+  <h2 style="color:#0B3D91;">Cardship Shop</h2>
+  <p style="margin-bottom:20px;">Upgrade your collection with exclusive cosmetics, card sleeves, and accessories!</p>
+
+  <div class="shop-grid">
+    <!-- Product Card 1 -->
+    <div class="product-card">
+      <img src="card-sleeve1.png" alt="Card Sleeve" class="product-img">
+      <h3>Premium Holographic Sleeve</h3>
+      <p class="desc">Protect your cards in style with a reflective finish that shines under any light.</p>
+      <div class="price">$4.99</div>
+      <button class="buy-btn">Add to Cart</button>
+    </div>
+
+    <!-- Product Card 2 -->
+    <div class="product-card">
+      <img src="deck-box.png" alt="Deck Box" class="product-img">
+      <h3>Collector Deck Box</h3>
+      <p class="desc">Keep your prized cards safe with our high-quality magnetic deck box.</p>
+      <div class="price">$9.99</div>
+      <button class="buy-btn">Add to Cart</button>
+    </div>
+
+    <!-- Product Card 3 -->
+    <div class="product-card">
+      <img src="avatar-frame.png" alt="Avatar Frame" class="product-img">
+      <h3>Exclusive Avatar Frame</h3>
+      <p class="desc">Personalize your Cardship profile with this limited-edition frame.</p>
+      <div class="price">$2.99</div>
+      <button class="buy-btn">Add to Cart</button>
+    </div>
+
+    <!-- Product Card 4 -->
+    <div class="product-card">
+      <img src="gem-pack.png" alt="Gem Pack" class="product-img">
+      <h3>Gem Pack</h3>
+      <p class="desc">Buy gems to unlock rare cosmetics and new themes for your account.</p>
+      <div class="price">$5.00</div>
+      <button class="buy-btn">Add to Cart</button>
+    </div>
+
+    <!-- Product Card 5 -->
+    <div class="product-card">
+      <img src="limited-card.png" alt="Limited Card" class="product-img">
+      <h3>Limited Edition Card</h3>
+      <p class="desc">Own a piece of collector history. Rare drop—only available for a short time.</p>
+      <div class="price">$14.99</div>
+      <button class="buy-btn">Add to Cart</button>
+    </div>
+  </div>
+</section>
+
+
+<!-- Profile -->
+<section id="profile">
+  <h2>Your Profile</h2>
+  <p>Manage your posts, saved items, and collection here.</p>
+</section>
+
+<!-- Login -->
+<section id="login">
+  <div class="auth-box card">
+    <h2>Login</h2>
+    <input id="loginEmail" type="email" placeholder="Email">
+    <input id="loginPassword" type="password" placeholder="Password">
+    <button id="loginBtn" class="btn">Login</button>
+    <hr>
+    <button id="googleLogin" class="btn">Sign in with Google</button>
+  </div>
+</section>
+
+<!-- Register -->
+<section id="register">
+  <div class="auth-box card">
+    <h2>Register</h2>
+    <input id="regEmail" type="email" placeholder="Email">
+    <input id="regPassword" type="password" placeholder="Password">
+    <button id="registerBtn" class="btn">Register with Email</button>
+    <hr>
+    <button id="googleRegister" class="btn">Register with Google</button>
+  </div>
+</section>
+
+</main>
+
+<footer style="text-align:center;padding:20px;">© 2025 Cardship</footer>
+
+<script>
+function showPage(id){
+  document.querySelectorAll('main section').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));
+  document.querySelector('nav a[onclick="showPage(\''+id+'\')"]').classList.add('active');
+}
+
+// Firebase Authentication
+const loginBtn = document.getElementById("loginBtn");
+if(loginBtn) loginBtn.addEventListener("click", ()=>{
+  const email = document.getElementById("loginEmail").value;
+  const password = document.getElementById("loginPassword").value;
+  auth.signInWithEmailAndPassword(email,password)
+    .then(u=>alert("Logged in as "+u.user.email))
+    .catch(e=>alert(e.message));
+});
+
+const registerBtn = document.getElementById("registerBtn");
+if(registerBtn) registerBtn.addEventListener("click", ()=>{
+  const email = document.getElementById("regEmail").value;
+  const password = document.getElementById("regPassword").value;
+  auth.createUserWithEmailAndPassword(email,password)
+    .then(u=>alert("Registered as "+u.user.email))
+    .catch(e=>alert(e.message));
+});
+
+const googleLogin = document.getElementById("googleLogin");
+const googleRegister = document.getElementById("googleRegister");
+[googleLogin, googleRegister].forEach(btn=>{
+  if(btn) btn.addEventListener("click", ()=>{
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider)
+      .then(result=>alert("Logged in as "+result.user.displayName))
+      .catch(e=>alert(e.message));
+  });
+});
+</script>
+
+</body>
+</html>
+
+
+
+
