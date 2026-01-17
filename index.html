@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cardship - v1.0.2</title>
+    <!-- Firebase CDN (v10.12.5) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-storage-compat.js"></script>
+    <!-- Emoji Picker -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/emoji-picker-element@1.11.0/dist/emoji-picker-element.css">
+    <!-- Google Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .animate-on-load {
+            animation: fadeIn 0.8s ease forwards;
+            opacity: 0;
+        }
+        
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+        .delay-4 { animation-delay: 0.4s; }
+        
+        .floating { animation: float 3s ease-in-out infinite; }
+        .pulse { animation: pulse 2s ease-in-out infinite; }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar animate-on-load delay-1">
+        <div class="container">
+            <div class="logo floating">Cardship <span>v1.0.2</span></div>
+            <div id="auth-section">Loading...</div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero animate-on-load delay-2">
+        <div class="container">
+            <h1 class="floating">Share Your Card Journey</h1>
+            <p>Discuss the latest card news, share your stories, and connect with fellow collectors</p>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="container main-content">
+        <!-- Buddy System Section -->
+        <div id="buddy-section" class="animate-on-load delay-3 hidden">
+            <div class="post-card">
+                <h3>Find & Add Buddies</h3>
+                <div class="buddy-search">
+                    <input type="text" id="buddy-username" placeholder="Enter username to add as buddy..." class="buddy-input">
+                    <button id="add-buddy-btn" class="btn primary-btn">Add Buddy</button>
+                </div>
+                
+                <div class="section-title small">
+                    <h4>Your Buddies</h4>
+                </div>
+                <div id="buddies-list" class="buddies-list">
+                    <div class="loading">No buddies yet. Add some!</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Post Creation Form -->
+        <div id="post-form-container" class="post-form-container animate-on-load delay-3 hidden">
+            <div class="post-card">
+                <h3>Create a New Post</h3>
+                <textarea id="post-content" placeholder="Share your thoughts about cards, news, or your life..." rows="4"></textarea>
+                
+                <!-- Emoji & Image Tools -->
+                <div class="post-tools">
+                    <button id="emoji-btn" class="tool-btn">
+                        <span class="material-icons">emoji_emotions</span>
+                    </button>
+                    <emoji-picker id="emoji-picker" class="hidden"></emoji-picker>
+                    
+                    <label for="image-upload" class="tool-btn">
+                        <span class="material-icons">image</span>
+                    </label>
+                    <input type="file" id="image-upload" accept="image/*" class="hidden">
+                    
+                    <span id="image-preview-text" class="hidden">Image selected!</span>
+                </div>
+                
+                <button id="submit-post" class="btn primary-btn pulse">Post</button>
+            </div>
+        </div>
+
+        <!-- Posts Feed -->
+        <div class="section-title animate-on-load delay-4">
+            <h2>Latest Posts</h2>
+            <p class="login-hint hidden">Login to create posts and add buddies!</p>
+        </div>
+        <div id="posts-feed" class="posts-feed animate-on-load delay-4">
+            <div class="loading">Loading posts...</div>
+        </div>
+    </main>
+
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <button id="close-modal" class="modal-close-btn">
+                <span class="material-icons">close</span>
+            </button>
+            <div class="modal-header">
+                <h3 id="modal-title">Login</h3>
+            </div>
+            <div class="modal-body">
+                <form id="auth-form">
+                    <!-- 注册时显示用户名输入 -->
+                    <div id="username-field" class="form-field hidden">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" placeholder="Enter your username" required>
+                    </div>
+                    
+                    <!-- School Selection -->
+                    <div id="school-field" class="form-field hidden">
+                        <label for="school">School (学校)</label>
+                        <select id="school" class="form-control" required>
+                            <option value="">Select your school</option>
+                            <optgroup label="International Schools">
+                                <option value="Dulwich College Shanghai">Dulwich College Shanghai (上海德威外籍人员子女学校)</option>
+                                <option value="Dulwich College Pudong">Dulwich College Pudong (上海德威浦东外籍人员子女学校)</option>
+                                <option value="Harrow Shanghai">Harrow Shanghai (上海哈罗外籍人员子女学校)</option>
+                                <option value="Dulwich College Suzhou">Dulwich College Suzhou (苏州德威外籍人员子女学校)</option>
+                                <option value="Wellington College Shanghai">Wellington College Shanghai (上海惠灵顿外籍人员子女学校)</option>
+                                <option value="Nord Anglia International School Shanghai Pudong">Nord Anglia International School Shanghai Pudong (上海诺德安达双语学校)</option>
+                                <option value="Dulwich College Beijing">Dulwich College Beijing (北京德威英国国际学校)</option>
+                            </optgroup>
+                            <optgroup label="Public High Schools">
+                                <option value="Shanghai High School">Shanghai High School (上海中学)</option>
+                                <option value="Shanghai Nanyang Model High School">Shanghai Nanyang Model High School (上海市南洋模范中学)</option>
+                                <option value="Shanghai Jiao Tong University Affiliated High School">Shanghai Jiao Tong University Affiliated High School (上海交通大学附属中学)</option>
+                                <option value="Fudan University Affiliated High School">Fudan University Affiliated High School (复旦大学附属中学)</option>
+                            </optgroup>
+                            <optgroup label="Private High Schools">
+                                <option value="Shanghai Pinghe Bilingual School">Shanghai Pinghe Bilingual School (上海平和双语学校)</option>
+                                <option value="Shanghai World Foreign Language Academy">Shanghai World Foreign Language Academy (上海市世界外国语中学)</option>
+                                <option value="Shanghai United International School">Shanghai United International School (上海协和双语学校)</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    
+                    <div id="email-field" class="form-field">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" placeholder="Enter your email" required>
+                    </div>
+                    
+                    <div id="password-field" class="form-field">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" placeholder="Enter your password" required>
+                        <span id="password-hint" class="hint-text">Password must be at least 6 characters</span>
+                    </div>
+                    
+                    <div id="auth-form-actions">
+                        <button
+                            id="login-btn"
+                            type="submit"
+                            class="btn primary-btn modal-submit-btn"
+                        >
+                            Login
+                        </button>
+
+                        <p class="form-switch">
+                            <span id="form-switch-text">Don't have an account? Register</span>
+                        </p>
+                    </div>
+                </form>
+                
+                <!-- Google Profile Setup Form -->
+                <div id="google-profile-setup" class="hidden">
+                    <h4>Complete Your Profile</h4>
+                    <div class="form-field">
+                        <label for="google-username">Username</label>
+                        <input type="text" id="google-username" placeholder="Create a username" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="google-school">School (学校)</label>
+                        <select id="google-school" class="form-control" required>
+                            <option value="">Select your school</option>
+                            <optgroup label="International Schools">
+                                <option value="Dulwich College Shanghai">Dulwich College Shanghai (上海德威外籍人员子女学校)</option>
+                                <option value="Dulwich College Pudong">Dulwich College Pudong (上海德威浦东外籍人员子女学校)</option>
+                                <option value="Harrow Shanghai">Harrow Shanghai (上海哈罗外籍人员子女学校)</option>
+                                <option value="Dulwich College Suzhou">Dulwich College Suzhou (苏州德威外籍人员子女学校)</option>
+                                <option value="Wellington College Shanghai">Wellington College Shanghai (上海惠灵顿外籍人员子女学校)</option>
+                                <option value="Nord Anglia International School Shanghai Pudong">Nord Anglia International School Shanghai Pudong (上海诺德安达双语学校)</option>
+                                <option value="Dulwich College Beijing">Dulwich College Beijing (北京德威英国国际学校)</option>
+                            </optgroup>
+                            <optgroup label="Public High Schools">
+                                <option value="Shanghai High School">Shanghai High School (上海中学)</option>
+                                <option value="Shanghai Nanyang Model High School">Shanghai Nanyang Model High School (上海市南洋模范中学)</option>
+                                <option value="Shanghai Jiao Tong University Affiliated High School">Shanghai Jiao Tong University Affiliated High School (上海交通大学附属中学)</option>
+                                <option value="Fudan University Affiliated High School">Fudan University Affiliated High School (复旦大学附属中学)</option>
+                            </optgroup>
+                            <optgroup label="Private High Schools">
+                                <option value="Shanghai Pinghe Bilingual School">Shanghai Pinghe Bilingual School (上海平和双语学校)</option>
+                                <option value="Shanghai World Foreign Language Academy">Shanghai World Foreign Language Academy (上海市世界外国语中学)</option>
+                                <option value="Shanghai United International School">Shanghai United International School (上海协和双语学校)</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <button id="complete-profile-btn" class="btn primary-btn">Complete Profile</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 实时聊天窗口 -->
+    <div id="chat-window" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content chat-content">
+            <div class="chat-header">
+                <h3 id="chat-friend-name">Chat with [Friend]</h3>
+                <button id="close-chat-btn" class="modal-close-btn">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+            <div id="chat-messages" class="chat-messages"></div>
+            <div class="chat-input-container">
+                <input 
+                    type="text" 
+                    id="chat-input" 
+                    placeholder="Type a message..." 
+                    class="chat-input"
+                >
+                <button id="send-chat-btn" class="btn primary-btn">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden"></div>
+
+    <!-- Footer -->
+    <footer class="footer animate-on-load">
+        <div class="container">
+            <p>&copy; 2025 Cardship v1.0.2 | All Rights Reserved</p>
+        </div>
+    </footer>
+
+    <!-- Core Logic -->
+    <script src="app.js"></script>
+</body>
+</html>
