@@ -48,6 +48,23 @@ const googleProfileSetup = document.getElementById('google-profile-setup');
 const googleUsernameInput = document.getElementById('google-username');
 const googleSchoolSelect = document.getElementById('google-school');
 const completeProfileBtn = document.getElementById('complete-profile-btn');
+document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("auth-form");
+
+    console.log("FORM FOUND:", form);
+
+    if (!form) {
+        console.error("❌ auth-form NOT FOUND");
+        return;
+    }
+
+    form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        console.log("🔥 LOGIN SUBMIT FIRED");
+        alert("LOGIN BUTTON WORKS");
+    });
+});
+
 
 // Chat Elements
 let currentChatBuddyId = null;
