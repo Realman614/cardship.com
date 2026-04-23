@@ -1,9 +1,9 @@
 // 🔥 FIREBASE CONFIG (REPLACE WITH YOURS)
 const firebaseConfig = {
-  apiKey: "YOUR_KEY",
-  authDomain: "YOUR_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_BUCKET"
+  apiKey: "AIzaSyDaJrAdex_8KY8FPnQ7gvnifT3fZv5rYPM",
+  authDomain: "cardship-3575d.firebaseapp.com",
+  projectId: "cardship-3575d",
+  storageBucket: "cardship-3575d.firebasestorage.app"
 };
 
 firebase.initializeApp(firebaseConfig);
